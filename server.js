@@ -121,7 +121,51 @@ app.post("/api/users/:_id/exercises", async (req, res) => {
   }
 });
 
+// Get full exervise log
+app.get("/api/users/:_id/logs", async (req, res) => {
+  console.log("Searching Logs");
+  let id = req.params._id;
+  let {to, from, limit } = req.query;
 
+  try{
+    let findOne = await User.findOne({
+      _id: id 
+    })
+
+    // If user exists, add exercise
+    if (findOne){
+      console.log("Retrieving Stored User")
+      exerciseLog = [];
+      let i = 0;
+
+      // Iterate through each exercise
+      findOne.log.forEach(exercise => {
+        if(limit > i || !(limit)){
+          i++;
+          if(to){
+          to = new Date(to);
+          from = new Date(from);
+            if(to > exercise.date && from < exercise.date){
+                exerciseLog.push(exercise);
+            }
+          } else {
+            exerciseLog.push(exercise);
+          }
+        }
+      });
+
+      res.json({
+        _id: id,
+        username: findOne.username,
+        count: findOne.count,
+        log: exerciseLog
+      });
+    }
+    // If user doesn't exist, return error
+  } catch (err) {
+    console.error(err);
+  }
+});
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 })
